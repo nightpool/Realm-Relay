@@ -11,6 +11,7 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -173,17 +174,20 @@ public final class ROTMGRelay {
 												user.remoteBufferIndex += bytesRead;
 												while (user.remoteBufferIndex >= 5) {
 													int packetLength = ((ByteBuffer) ByteBuffer.allocate(4).put(user.remoteBuffer[0]).put(user.remoteBuffer[1]).put(user.remoteBuffer[2]).put(user.remoteBuffer[3]).rewind()).getInt();
+													ROTMGRelay.echo("Server Packet: " + user.remoteBufferIndex + " / " + packetLength);
+													// check to see if packet length is bigger than buffer size
+													if (user.remoteBuffer.length < packetLength)
+													{      // resize buffer to match packet length
+														user.remoteBuffer = Arrays.copyOf(user.remoteBuffer, packetLength);
+													}
 													if (user.remoteBufferIndex < packetLength) {
 														break;
 													}
 													byte packetId = user.remoteBuffer[4];
 													byte[] packetBytes = new byte[packetLength - 5];
-													for (int index = 0; index < packetBytes.length; index++) {
-														packetBytes[index] = user.remoteBuffer[index + 5];
-													}
-													for (int index = packetLength; index < user.remoteBufferIndex; index++) {
-														user.remoteBuffer[index - packetLength] = user.remoteBuffer[index];
-													}
+													System.arraycopy(user.remoteBuffer, 5, packetBytes, 0, packetLength - 5);
+													if (user.remoteBufferIndex > packetLength)
+														System.arraycopy(user.remoteBuffer, packetLength, user.remoteBuffer, 0, user.remoteBufferIndex - packetLength);
 													user.remoteBufferIndex -= packetLength;
 													user.remoteRecvRC4.cipher(packetBytes);
 													Packet packet = Packet.create(packetId, packetBytes);
@@ -222,12 +226,9 @@ public final class ROTMGRelay {
 											}
 											byte packetId = user.localBuffer[4];
 											byte[] packetBytes = new byte[packetLength - 5];
-											for (int index = 0; index < packetBytes.length; index++) {
-												packetBytes[index] = user.localBuffer[index + 5];
-											}
-											for (int index = packetLength; index < user.localBufferIndex; index++) {
-												user.localBuffer[index - packetLength] = user.localBuffer[index];
-											}
+											System.arraycopy(user.localBuffer, 5, packetBytes, 0, packetLength - 5);
+											if (user.localBufferIndex > packetLength)
+												System.arraycopy(user.localBuffer, packetLength, user.localBuffer, 0, user.localBufferIndex - packetLength);
 											user.localBufferIndex -= packetLength;
 											user.localRecvRC4.cipher(packetBytes);
 											Packet packet = Packet.create(packetId, packetBytes);

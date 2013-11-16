@@ -16,7 +16,7 @@ public class User {
 	public int localBufferIndex = 0;
 	public final RC4 localRecvRC4 = new RC4(rc4key0);
 	public final RC4 localSendRC4 = new RC4(rc4key1);
-	public final byte[] remoteBuffer = new byte[bufferLength];
+	public byte[] remoteBuffer = new byte[bufferLength];
 	public int remoteBufferIndex = 0;
 	public final RC4 remoteRecvRC4 = new RC4(rc4key1);
 	public final RC4 remoteSendRC4 = new RC4(rc4key0);
