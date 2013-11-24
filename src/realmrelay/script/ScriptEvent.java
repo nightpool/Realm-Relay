@@ -1,6 +1,5 @@
 package realmrelay.script;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -64,7 +63,7 @@ public class ScriptEvent {
 						remoteAddress = new InetSocketAddress(socketAddress.getHostString(), socketAddress.getPort() == -1 ? ROTMGRelay.instance.remotePort : socketAddress.getPort());
 					}
 					remoteSocket.connect(remoteAddress, 10000);
-					user.remoteNoDataTime = System.currentTimeMillis();
+					user.remote.noDataTime = System.currentTimeMillis();
 					user.remoteSocket = remoteSocket;
 					user.scriptManager.trigger("onConnect");
 				} catch (IOException e) {
@@ -208,14 +207,7 @@ public class ScriptEvent {
 	 * @throws IOException
 	 */
 	public void sendToClient(Packet packet) throws IOException {
-		byte[] packetBytes = packet.getBytes();
-		this.user.localSendRC4.cipher(packetBytes);
-		byte packetId = packet.id();
-		int packetLength = packetBytes.length + 5;
-		DataOutputStream out = new DataOutputStream(user.localSocket.getOutputStream());
-		out.writeInt(packetLength);
-		out.writeByte(packetId);
-		out.write(packetBytes);
+		user.sendToClient(packet);
 	}
 	
 	/**
@@ -224,14 +216,7 @@ public class ScriptEvent {
 	 * @throws IOException
 	 */
 	public void sendToServer(Packet packet) throws IOException {
-		byte[] packetBytes = packet.getBytes();
-		this.user.remoteSendRC4.cipher(packetBytes);
-		byte packetId = packet.id();
-		int packetLength = packetBytes.length + 5;
-		DataOutputStream out = new DataOutputStream(user.remoteSocket.getOutputStream());
-		out.writeInt(packetLength);
-		out.writeByte(packetId);
-		out.write(packetBytes);
+		user.sendToServer(packet);
 	}
 	
 	public void setGameIdSocketAddress(int gameId, String host, int port) {
